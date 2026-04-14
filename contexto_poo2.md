@@ -399,19 +399,191 @@ public int puntosGanadosEnPartido(Partido partido) {
 
 ---
 
+## EJERCICIOS DEL CUADERNILLO RESUELTOS
+
+### Ejercicio 1 — Algo huele mal
+
+#### 1.1 Protocolo de Cliente
+
+- **Smell:** nombres abreviados e ilegibles (`lmtCrdt`, `mtFcE`, `mtCbE`) → el código obliga a leer el comentario para entender el propósito
+- **Refactoring:** Rename Method + Rename Parameter
+- **Resultado:** `limiteDeCredito()`, `montoFacturadoEntre(fechaInicio, fechaFin)`, `montoCobradoEntre(fechaInicio, fechaFin)`
+
+#### 1.2 Participación en proyectos
+
+- **Smell:** Feature Envy — `Persona.participaEnProyecto()` accede a datos internos de `Proyecto`
+- **Refactoring:** Move Method → se mueve a `Proyecto` como `participa(Persona p)`
+- **El cambio es apropiado** porque `Proyecto` es quien conoce sus participantes
+
+#### 1.3 Cálculos
+
+- **Smells:** Long Method + Duplicate Code (el loop se repite para cada cálculo)
+- **Refactoring:** Extract Method → `obtenerPromedioEdades()` y `obtenerTotalSalarios()`
+- **Tradeoff:** separar en dos métodos introduce un segundo recorrido, pero se gana claridad. Fowler: primero claridad, luego optimizar si hace falta
+- **Nota:** la división por cero si `personal` está vacío es un bug, corregirlo NO es refactoring (cambia el comportamiento)
+
+---
+
+### Ejercicio 2 — Iteradores circulares
+
+- **Tarea:** Rename Variable `result` → `currentPosition` en `next()` (líneas 17 y 18)
+- **Inconveniente:** existe otra variable `result` en el constructor, pero son locales a distintos métodos → no hay conflicto real. Un IDE mal configurado podría renombrar ambas si no distingue el scope correctamente
+
+---
+
+### Ejercicio 3 — Iteradores circulares bis
+
+- **Smell:** Duplicate Code — `CharRing` e `IntRing` tienen estructura casi idéntica: campo `idx`, lógica de reset en `next()`
+- **Refactoring:** Extract Superclass
+- **Secuencia:**
+  1. Crear superclase `Ring` con Pull Up Field de `idx` (protected)
+  2. Extract Method de la lógica del reset → `resetIfNeeded(int length)`
+  3. Pull Up Method de `resetIfNeeded()` a `Ring`
+  4. Declarar `next()` abstracto en `Ring` (tipos de retorno distintos, no se puede subir completo)
+  5. `CharRing` e `IntRing` extienden `Ring`
+- **Nota:** `source` NO se sube porque tiene distinto tipo en cada subclase (`char[]` vs `int[]`)
+- **Tests:** deben seguir pasando ya que el comportamiento observable no cambió
+
+---
+
+### Ejercicio 4 — Alcance en Redes Sociales
+
+Rename Method y Rename Parameter — cambios archivo por archivo:
+
+1. `procesar` → `impacto`: afecta línea 11 (declaración) y línea 15 (llamada) en `Publicacion.java`
+2. `calcular` → `alcance` (en `Publicacion`): afecta línea 14 en `Publicacion.java` y línea 13 en `Perfil.java` (impacto cruzado entre archivos)
+3. `calcular` → `alcance` (en `Perfil`): afecta línea 15 en `Perfil.java`. En el código mostrado no hay otras llamadas, pero en un sistema real habría que rastrear todas las referencias
+4. Rename Parameter `p` → `publicacion` en `agregarPublicacion`: afecta la firma y el cuerpo del método en línea 10 de `Perfil.java`
+
+**Regla general:** Rename Method debe rastrear TODOS los lugares donde se invoca, no solo la declaración.
+
+---
+
+### Ejercicio 5 — Productos (HotelStay / CarRental)
+
+#### Tarea 1: Encapsulate Field (`cost` público → privado)
+
+- Cambiar `public double cost` a `private double cost` en ambas clases
+- Generar getter `getCost()` y setter `setCost()` públicos
+- **¿Modificar tests?** Solo si el test accedía directamente al campo público (mala práctica). Un test bien escrito es agnóstico de la implementación
+
+#### Tarea 2: Rename Field (`cost` → `quote` en `priceFactor()`)
+
+- Afecta en `HotelStay`: línea de declaración, parámetro del constructor, asignación en constructor, y referencia en `priceFactor()`
+- **¿Modificar tests?** Si el campo era público y los tests lo usaban directamente, sí hay que actualizarlos
+
+#### Tareas 3, 4 y 5: Pull Up Method (`startDate` y `endDate`)
+
+- **No es posible directamente** porque ambos métodos usan `timePeriod` que vive en las subclases
+- **Precondición violada:** los elementos que usa el método deben ser accesibles desde la superclase
+- **Refactorings previos necesarios:**
+  1. Pull Up Field de `timePeriod` a `Product`
+  2. Change Access Modifier: `private` → `protected`
+- **Luego sí:** Pull Up Method de `startDate()` y `endDate()` a `Product`
+
+#### Tarea 6: Feature Envy en `price()`
+
+- `HotelStay.price()` envidia datos de `Hotel`; `CarRental.price()` envidia datos de `Company`
+- **Refactoring:** Move Method → crear `precioConDescuento()` en `Hotel` y `precioConPromocion()` en `Company`
+- `price()` en cada subclase delega a esos métodos
+
+---
+
+### Ejercicio 6 — Iteración sobre smells (parcialmente resuelto)
+
+#### 6.1 Empleados
+
+- **Iteración 1:** Duplicate Code en campos → Extract Superclass + Pull Up Field de `nombre`, `apellido`, `sueldoBasico` a clase abstracta `Empleado` + Encapsulate Field (protected)
+- **Iteración 2:** Duplicate Code en `(sueldoBasico * 0.13)` → Extract Method `descuento()` + Pull Up Method a `Empleado`
+- **Iteración 3:** campos `horasTrabajadas` y `cantidadHijos` siguen siendo públicos → Encapsulate Field (protected)
+
+#### 6.2 Juego
+
+- **Smells:** Encapsulamiento roto (campos públicos) + Feature Envy (`Juego` manipula directamente `puntuacion` de `Jugador`)
+- **Refactoring:** Encapsulate Field + Move Method
+- **Principio clave:** los objetos deben ser responsables de su propio estado. `Jugador` decide cómo modificar su puntuación; `Juego` solo decide cuándo
+
+#### 6.3 a 6.6 — Pendientes
+
+---
+
+### Ejercicios 7, 8 y 9 — Pendientes
+
+---
+
+## Refactorings adicionales vistos en ejercicios
+
+| Refactoring                    | Descripción                                             |
+| ------------------------------ | ------------------------------------------------------- |
+| **Rename Method**              | Renombrar un método para que exprese mejor su propósito |
+| **Rename Parameter**           | Renombrar un parámetro para mayor claridad              |
+| **Rename Variable**            | Renombrar una variable local. Afecta solo su scope      |
+| **Encapsulate Field**          | Campo público → privado + getter/setter                 |
+| **Extract Superclass**         | Extraer comportamiento/estado común en una superclase   |
+| **Change Access Modifier**     | Cambiar visibilidad (ej: private → protected)           |
+| **Replace Loop with Pipeline** | Reemplazar un for con streams de Java                   |
+
+---
+
+## Visibilidad en Java
+
+| Modificador       | Accesible desde                         |
+| ----------------- | --------------------------------------- |
+| `public`          | Cualquier clase                         |
+| `protected`       | La propia clase y sus subclases         |
+| (sin modificador) | Solo el mismo paquete (package-private) |
+| `private`         | Solo la propia clase                    |
+
+---
+
+## Streams en Java (resumen)
+
+```java
+// Estructura básica
+coleccion.stream()
+    .operacionIntermedia()  // filter, map, sorted...
+    .operacionFinal();      // collect, sum, count, average...
+
+// Ejemplos comunes
+personal.stream()
+    .filter(e -> e.getEdad() > 30)
+    .collect(Collectors.toList());           // List filtrada
+
+personal.stream()
+    .mapToDouble(e -> e.getSalario())
+    .sum();                                  // suma
+
+personal.stream()
+    .mapToInt(e -> e.getEdad())
+    .average()
+    .orElse(0.0);                           // promedio (orElse es más seguro que getAsDouble)
+
+personal.stream()
+    .filter(e -> e.getSalario() > 50000)
+    .map(e -> e.getNombre())
+    .collect(Collectors.toList());           // filter + map combinados
+```
+
+- `.collect(Collectors.toList())` solo va cuando querés una `List` como resultado
+- `mapToDouble` / `mapToInt` convierten a stream de primitivos habilitando `.sum()`, `.average()`, etc.
+- Los streams son **lazy**: no se ejecutan hasta la operación final
+
+---
+
 ## Material disponible
 
 - `Intro_a_refactoring.pdf` — conceptos base, leyes de Lehman, ejemplos con Product/HotelStay/CarRental
 - `2-Slides-Catalogo.pdf` — catálogo completo de refactorings con mecánica
 - `3-Refactoring-Tools.pdf` — herramientas, AST, the 2 hats
 - `Refactoring-Ejemplo.pdf` — ejemplo completo Club de Tenis (Extract Method, Move Method, Replace Conditional with Polymorphism, Replace Temp with Query)
+- `Cuadernillo_Semestral_de_Actividades_Refactoring_2026.pdf` — ejercicios de práctica
 
 ## Pendiente / por agregar
 
+- Ejercicios 6.3 a 6.6, 7, 8 y 9 del cuadernillo
 - PDFs de Patrones de diseño
 - PDFs de Frameworks
-- Prácticas y ejercicios de refactoring
 
 ---
 
-_Última actualización: agregado ejemplo Club de Tenis con secuencia completa de refactorings_
+_Última actualización: agregados ejercicios 1 a 6.2 del cuadernillo + secciones de visibilidad Java y streams_
