@@ -30,6 +30,7 @@ TEORIA/
 
 PRACTICA/
 ├── 0 - INTRODUCCION/        ← Ejercicios previos (Piedra Papel Tijera, Red Social)
+│   └── REPASO-INTRODUCCION.md ← Hoja de repaso rápido
 └── 1 - REFACTORING/         ← Cuadernillo semestral 2026
     ├── 1-1.java … 9.java    ← Soluciones ejercicios 1 al 9
     └── REPASO-REFACTORING.md ← Hoja de repaso rápido
