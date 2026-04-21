@@ -31,6 +31,8 @@ TEORIA/
 PRACTICA/
 ├── 0 - INTRODUCCION/        ← Ejercicios previos (Piedra Papel Tijera, Red Social)
 └── 1 - REFACTORING/         ← Cuadernillo semestral 2026
+    ├── 1-1.java … 9.java    ← Soluciones ejercicios 1 al 9
+    └── REPASO-REFACTORING.md ← Hoja de repaso rápido
 
 EXPLICACION PRACTICA/
 └── 0- EXPLICACION PRACTICA REPASO/
@@ -48,10 +50,11 @@ GUIAS PARA LA MATERIA/
 
 ### Refactoring
 - Bad smells y catálogo de refactorings (Fowler)
-- Extract Method, Move Method, Replace Conditional with Polymorphism, Pull Up Method/Field, Replace Temp with Query, Extract Superclass, Encapsulate Field, Replace Loop with Pipeline
+- Extract Method, Move Method, Replace Conditional with Polymorphism, Pull Up Method/Field, Replace Temp with Query, Inline Temp, Extract Superclass, Encapsulate Field, Replace Loop with Pipeline, Replace Magic Number with Symbolic Constant, Form Template Method (con hook methods)
 - Ejemplo completo: Club de Tenis
+- Ejercicios 1 al 9 del cuadernillo 2026 — resueltos y comparados con resolución de referencia
 
 ### Patrones de diseño
 - Introducción al concepto de patrones (Alexander → GoF)
 - **Adapter:** adaptar interfaces incompatibles
-- Template Method *(en progreso)*
+- **Template Method** *(en progreso)*
