@@ -2,27 +2,47 @@ P: ¿Por qué RedSocial usa Map<String, Usuario> en lugar de List<Usuario>?
 R: Porque el Map usa el screenName como clave única — garantiza que no
  haya duplicados y permite buscar un usuario directamente sin recorrer
   toda la lista. Es el equivalente al Dictionary en Swift.
+ (La referencia usa List con stream filter — ambas son válidas,
+  Map es más eficiente para búsquedas frecuentes por nombre.)
 
-P: ¿Por qué ReTweet hereda de Tweet?
-R: Porque ReTweet es un Tweet — cumple la relación "es un". Al heredar,
- toma el texto del tweet original (super(tweetOrigen.getTexto())), 
- reutiliza la validación de 1..280 caracteres y permite que Usuario 
- tenga una sola lista List<Tweet> con tweets y retweets mezclados gracias 
- al polimorfismo.
+P: ¿Por qué Retweet NO hereda de Tweet sino de Publicacion?
+R: Un Retweet no ES un Tweet — es una Publicación que referencia a un Tweet.
+ La jerarquía correcta es:
+   Publicacion (abstract)
+   ├── Tweet    → tiene texto propio, lista de retweets
+   └── Retweet  → tiene referencia al Tweet original
+ Si Retweet extends Tweet hereda métodos que no le corresponden y
+ la relación conceptual es incorrecta.
+
+P: ¿Qué pasa con un Retweet cuando se borra el Tweet original?
+R: Queda huérfano — su referencia al Tweet original es inválida.
+ Se maneja nulleando la referencia: Retweet.eliminar() pone this.tweet = null.
+ Si alguien llama getTexto() sobre un Retweet huérfano, se lanza
+ IllegalArgumentException. Así el objeto falla explícitamente
+ en lugar de devolver datos incorrectos.
 
 P: ¿En qué orden se elimina un usuario y por qué importa el orden?
-R: 1) RedSocial limpia retweets huérfanos en otros usuarios, 
-2) Usuario elimina sus propios tweets, 
-3) RedSocial elimina al usuario del mapa. El orden importa porque si 
-eliminás al usuario primero, perdés la referencia a sus tweets 
-y no podés limpiar los retweets huérfanos en otros usuarios.
+R: 1) Por cada publicación del usuario: limpiar referencias de retweets huérfanos
+2) Vaciar la lista de publicaciones del usuario
+3) Remover al usuario de la colección
+ El orden importa porque si eliminás al usuario primero, perdés
+ la referencia a sus publicaciones y no podés limpiar los retweets huérfanos.
 
 P: ¿Quién es responsable de cada paso del borrado?
-R: RedSocial coordina (es la única que conoce a todos los usuarios),
- Usuario limpia sus propios tweets (es el dueño). 
+R: RedSocial/Twitter coordina (es la única que conoce a todos los usuarios).
+ Usuario limpia sus propias publicaciones (es el dueño).
+ Tweet limpia sus propios retweets (es el dueño de esa lista).
+ Retweet se desvincula del Tweet original.
  Cada clase tiene su responsabilidad.
 
 P: ¿Por qué Tweet lanza IllegalArgumentException en el constructor en lugar de retornar un String de error?
-R: Porque si el texto es inválido el objeto no debería existir. 
-Con la excepción en el constructor garantizás que todo objeto 
+R: Porque si el texto es inválido el objeto no debería existir.
+Con la excepción en el constructor garantizás que todo objeto
 Tweet que exista es siempre válido — esto se llama invariante de clase.
+
+P: ¿Para qué sirve eliminarLasReferenciasDeRetweets() en Publicacion?
+R: Es un método polimórfico en la superclase abstracta que permite
+ iterar sobre List<Publicacion> sin saber si cada elemento es Tweet o Retweet.
+ - Tweet: itera sus retweets y llama retweet.eliminar() en cada uno, luego limpia la lista
+ - Retweet: no hace nada (cuerpo vacío) — no tiene retweets propios
+ Es el mismo polimorfismo que permite tener una sola lista de publicaciones.

@@ -267,9 +267,11 @@ El ejemplo IoT ya introduce la idea: `Actuador.update(Sensor)` llama `registrarC
 
 ### Red Social (tipo Twitter)
 
-- `RedSocial` usa `Map<String, Usuario>` para screenName único
-- `Tweet` valida texto 1..280 chars; `ReTweet extends Tweet`
-- Eliminación en cascada coordinada por `RedSocial`
+- `Twitter`/`RedSocial` usa `Map<String, Usuario>` para screenName único (referencia usa `List` con stream — ambas válidas)
+- Jerarquía: `Publicacion` (abstract) → `Tweet` y `Retweet` por separado. `Retweet` NO extiende `Tweet` — es una Publicación que referencia a un Tweet
+- `Tweet` valida texto 1..280 en constructor (invariante de clase); mantiene `List<Retweet>` propios
+- `Retweet.eliminar()` pone `this.tweet = null`; `getTexto()` lanza excepción si es huérfano
+- Eliminación en cascada: `Twitter` coordina → `Usuario.eliminarPublicaciones()` → `Publicacion.eliminarLasReferenciasDeRetweets()` (polimórfico)
 
 ---
 

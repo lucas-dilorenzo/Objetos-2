@@ -6,38 +6,57 @@ Dos ejercicios de repaso previos a la materia. Conceptos clave: polimorfismo, he
 
 ## Ejercicio 1 — Red Social (tipo Twitter)
 
+### Jerarquía de clases
+
+```
+Publicacion (abstract)
+├── Tweet    → texto propio (1..280), lista de Retweet
+└── Retweet  → referencia al Tweet original
+```
+
+`Retweet` NO extiende `Tweet` — un Retweet no *es* un Tweet, es una Publicación que apunta a uno. Extender `Tweet` sería incorrecto conceptualmente y heredaría métodos que no corresponden.
+
 ### Clases principales
 
 | Clase | Responsabilidad |
 |---|---|
-| `RedSocial` | Registrar usuarios, coordinar borrado en cascada |
-| `Usuario` | Publicar tweets, seguir/dejar de seguir, eliminar propios tweets |
-| `Tweet` | Texto 1..280 chars — valida en constructor |
-| `ReTweet extends Tweet` | Es un Tweet — reutiliza validación vía `super(tweetOrigen.getTexto())` |
+| `Twitter` / `RedSocial` | Registrar usuarios, coordinar borrado en cascada |
+| `Usuario` | Mantener lista de `Publicacion`, eliminar las propias |
+| `Publicacion` (abstract) | `getTexto()` + `eliminarLasReferenciasDeRetweets()` |
+| `Tweet` | Valida texto 1..280 en constructor, mantiene lista de sus `Retweet` |
+| `Retweet` | Referencia al `Tweet` original; `eliminar()` la pone en null |
 
 ### Decisiones de diseño
 
 **¿Por qué `Map<String, Usuario>` y no `List<Usuario>`?**
-El Map usa el screenName como clave única — garantiza no duplicados y permite buscar sin recorrer toda la lista.
+El Map usa el screenName como clave única — garantiza no duplicados y permite buscar sin recorrer toda la lista. La referencia usa `List` con stream filter — ambas son válidas, `Map` es más eficiente.
 
-**¿Por qué `ReTweet extends Tweet`?**
-ReTweet *es un* Tweet — cumple la relación "es un". Hereda la validación de 280 chars y permite que `Usuario` tenga una sola `List<Tweet>` con tweets y retweets mezclados (polimorfismo).
+**¿Para qué sirve `eliminarLasReferenciasDeRetweets()` en `Publicacion`?**
+Permite iterar `List<Publicacion>` sin saber si cada elemento es `Tweet` o `Retweet`:
+- `Tweet`: llama `retweet.eliminar()` en cada retweet propio → luego limpia la lista
+- `Retweet`: cuerpo vacío — no tiene retweets propios
 
 **¿Por qué `Tweet` lanza `IllegalArgumentException` en el constructor?**
-Si el texto es inválido el objeto no debería existir. Con la excepción en el constructor garantizás que todo `Tweet` que exista sea siempre válido — **invariante de clase**.
+Si el texto es inválido el objeto no debería existir — **invariante de clase**.
+
+**¿Qué pasa con un Retweet cuando se borra el Tweet original?**
+`Retweet.eliminar()` pone `this.tweet = null`. Si alguien llama `getTexto()` sobre ese retweet huérfano, lanza excepción — falla explícitamente en lugar de devolver datos incorrectos.
 
 ### Borrado en cascada — el orden importa
 
 ```
-1. RedSocial limpia retweets huérfanos en otros usuarios
-2. Usuario elimina sus propios tweets
-3. RedSocial elimina al usuario del mapa
+1. Por cada publicación del usuario: limpiar referencias de retweets huérfanos
+2. Vaciar la lista de publicaciones del usuario
+3. Remover al usuario de la colección
 ```
 
-Si eliminás al usuario primero, perdés la referencia a sus tweets y no podés limpiar los retweets huérfanos.
+Si eliminás al usuario primero, perdés la referencia a sus publicaciones.
 
-**¿Quién es responsable de cada paso?**
-`RedSocial` coordina (es la única que conoce a todos los usuarios). `Usuario` limpia sus propios tweets (es el dueño). Cada clase tiene su responsabilidad.
+**Responsabilidades:**
+- `Twitter` coordina (conoce a todos los usuarios)
+- `Usuario` limpia sus propias publicaciones
+- `Tweet` limpia sus propios retweets
+- `Retweet` se desvincula del Tweet original
 
 ---
 
@@ -87,6 +106,15 @@ abstract class Jugada {
     abstract Resultado contraTijera(Tijera t);
     abstract Resultado contraLagarto(Lagarto l);
     abstract Resultado contraSpock(Spock s);
+}
+
+class Jugador {
+    private Jugada jugada;
+    public Jugador(Jugada jugada) { this.jugada = jugada; }
+    public Jugada getJugada() { return jugada; }
+    public Resultado juegaContra(Jugador otro) {
+        return this.jugada.juegaContra(otro.jugada);
+    }
 }
 ```
 

@@ -112,6 +112,27 @@ class Spock extends Jugada {
     Resultado contraSpock(Spock s)     { return Resultado.EMPATE; }
 }
 
+/*
+ * Clase Jugador — envuelve una Jugada.
+ * Permite modelar a un participante que tiene una jugada asignada,
+ * separando la identidad del jugador de la lógica de la jugada.
+ */
+class Jugador {
+    private Jugada jugada;
+
+    public Jugador(Jugada jugada) {
+        this.jugada = jugada;
+    }
+
+    public Jugada getJugada() {
+        return jugada;
+    }
+
+    public Resultado juegaContra(Jugador otro) {
+        return this.jugada.juegaContra(otro.jugada);
+    }
+}
+
 public class Main {
     public static void main(String[] args) {
         // Casos base - Piedra Papel Tijera
