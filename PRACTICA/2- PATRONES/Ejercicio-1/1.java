@@ -26,8 +26,13 @@
 // -----------------------
 //   Target  → interfaz Exporter        (lo que Biblioteca espera)
 //   Client  → clase Biblioteca         (quien usa el Target)
-//   Adaptee → JSONObject / JSONArray   (librería externa, no se modifica)
+//   Adaptee → librería json-simple     (no se puede modificar; JSONObject y JSONArray
+//                                       son sus clases concretas que usamos adentro)
 //   Adapter → clase JSONSimpleAdapter  (la creamos nosotros)
+//
+// Tip para identificar el Adaptee:
+//   Preguntate "¿qué tengo pero no puedo usar directamente porque tiene interfaz
+//   incompatible?" → eso es el Adaptee. No importa si es una clase o una librería.
 //
 // =============================================================================
 
@@ -115,11 +120,23 @@ class Biblioteca {
 //     <version>1.1.1</version>
 //   </dependency>
 //
-// Aquí simulamos JSONObject y JSONArray para poder estudiar el código
-// sin depender de la librería externa.
+// IMPORTANTE sobre JSONObject y JSONArray:
+// ----------------------------------------
+// En el proyecto real estas clases vienen de la dependencia json-simple:
+//   import org.json.simple.JSONArray;
+//   import org.json.simple.JSONObject;
+// No las escribís vos — las importás.
+//
+// En el examen, el enunciado te describe los métodos disponibles:
+//   JSONObject → put(Object key, Object value)
+//   JSONArray  → add(Object)
+//   Ambas      → toJSONString()
+// Con esa info armás el código del Adapter. No hace falta saberse la API de memoria.
+//
+// En este archivo las simulamos solo para que compile standalone sin Maven.
 // =============================================================================
 
-// Simulación de las clases de json-simple (solo para este archivo de estudio)
+// Simulación de las clases de json-simple (NO las escribís vos en el proyecto real)
 class JSONObject {
     private StringBuilder sb = new StringBuilder("{");
     private boolean first = true;
